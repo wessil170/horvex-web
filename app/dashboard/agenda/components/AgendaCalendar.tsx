@@ -6,12 +6,26 @@ import { localizer } from "./agendaLocalizer"
 import { messages } from "./agendaMessages"
 import { corServico } from "./agendaUtils"
 
+type MeuEvento = {
+  title: string;
+  start: Date;
+  end: Date;
+};
+
+type Props = {
+  eventos: MeuEvento[];
+  profissionais: any[];
+  selecionarEvento: (e: MeuEvento) => void;
+  selecionarSlot: (slot: any) => void;
+  dataAtual: Date;
+  setDataAtual: (date: Date) => void;
+};
 
 
 import "react-big-calendar/lib/css/react-big-calendar.css"
 
 
-function EventoCustom({ event }: any) {
+function EventoCustom({ event }: { event: MeuEvento }) {
 
   const [servico, cliente] = (event.title || "").split("\n")
 
@@ -43,7 +57,7 @@ export default function AgendaCalendar({
   dataAtual,
   setDataAtual
 
-}: any){
+}: Props){
 
   const [view,setView] = useState<View>("day");
 
@@ -51,7 +65,7 @@ export default function AgendaCalendar({
 
     <div style={{ height:"85vh" }}>
 
-      <Calendar
+      <Calendar<MeuEvento>
 
         localizer={localizer}
         messages={messages}
@@ -113,7 +127,7 @@ export default function AgendaCalendar({
           event: EventoCustom
         }}
 
-        eventPropGetter={(event)=>{
+        eventPropGetter={(event: MeuEvento)=>{
 
   const servico = event.title.split("\n")[0]
 

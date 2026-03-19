@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Calendar } from "react-big-calendar"
+import { Calendar, View } from "react-big-calendar"
 import { localizer } from "./agendaLocalizer"
 import { messages } from "./agendaMessages"
 import { corServico } from "./agendaUtils"
@@ -45,7 +45,7 @@ export default function AgendaCalendar({
 
 }: any){
 
-  const [view,setView] = useState("day")
+  const [view,setView] = useState<View>("day");
 
   return(
 
@@ -94,9 +94,9 @@ export default function AgendaCalendar({
 }}
 
 
-        views={["day","week","month"]}
+        views={["day","week","month"] as View[]}
         view={view}
-        onView={(v)=>setView(v)}
+        onView={(v: View)=>setView(v)}
 
 
         step={30}

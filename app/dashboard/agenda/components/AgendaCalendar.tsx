@@ -12,14 +12,21 @@ type MeuEvento = {
   end: Date;
 };
 
+type Profissional = {
+  id: number;
+  nome: string;
+};
+
+
 type Props = {
   eventos: MeuEvento[];
-  profissionais: any[];
+  profissionais: Profissional[];
   selecionarEvento: (e: MeuEvento) => void;
   selecionarSlot: (slot: any) => void;
   dataAtual: Date;
   setDataAtual: (date: Date) => void;
 };
+
 
 
 import "react-big-calendar/lib/css/react-big-calendar.css"
@@ -65,7 +72,8 @@ export default function AgendaCalendar({
 
     <div style={{ height:"85vh" }}>
 
-      <Calendar<MeuEvento>
+      <Calendar<MeuEvento, Profissional>
+
 
         localizer={localizer}
         messages={messages}

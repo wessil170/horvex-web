@@ -1,93 +1,139 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL!;
+const API_URL = process.env.NEXT_PUBLIC_API_URL!
 
-export default function LoginPage() {
-  const router = useRouter();
+export default function LoginPage(){
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+const router = useRouter()
 
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
-    setMessage("");
+const [email,setEmail] = useState("")
+const [password,setPassword] = useState("")
+const [message,setMessage] = useState("")
+const [loading,setLoading] = useState(false)
 
-    console.log("API URL:", API_URL);
+async function handleLogin(e: React.FormEvent){
 
-    try {
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          username: email,
-          password: password,
-        }),
-      });
+e.preventDefault()
+setMessage("")
+setLoading(true)
 
-      console.log("Status:", response.status);
+try{
 
-      if (!response.ok) {
-        throw new Error("Credenciais inválidas");
-      }
+const response = await fetch(`${API_URL}/auth/login`,{
+method:"POST",
+headers:{
+"Content-Type":"application/x-www-form-urlencoded"
+},
+body:new URLSearchParams({
+username: email,
+password: password
+})
+})
 
-      const data = await response.json();
+if(!response.ok){
+throw new Error("Email ou senha inválidos")
+}
 
-      localStorage.setItem("token", data.access_token);
+const data = await response.json()
 
-      // Redireciona para dashboard
-      router.push("/dashboard");
+localStorage.setItem("token", data.access_token)
 
-    } catch (error: any) {
-      console.error("Erro no login:", error);
-      setMessage(error.message);
-    }
-  }
+router.push("/dashboard")
 
-  return (
-    <div className="flex items-center justify-center h-screen">
-      <form
-        onSubmit={handleLogin}
-        className="bg-white p-8 rounded shadow w-96"
-      >
-        <h1 className="text-xl font-bold mb-4">Login Horvex</h1>
+}catch(error:any){
+setMessage(error.message)
+}
 
-        <input
-          type="email"
-          placeholder="Email"
-          className="border p-2 w-full mb-4"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+setLoading(false)
+}
 
-        <input
-          type="password"
-          placeholder="Senha"
-          className="border p-2 w-full mb-4"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+return(
 
-        <button
-          type="submit"
-          className="bg-black text-white w-full p-2 rounded"
-        >
-          Entrar
-        </button>
+<div style={{
+height:"100vh",
+display:"flex",
+justifyContent:"center",
+alignItems:"center",
+background:"#f5f6fa"
+}}>
 
-        {message && (
-          <p className="mt-4 text-center text-sm text-red-600">
-            {message}
-          </p>
-        )}
-      </form>
-    </div>
-  );
+<form
+onSubmit={handleLogin}
+style={{
+width:"400px",
+background:"#fff",
+padding:"30px",
+borderRadius:"12px",
+boxShadow:"0 10px 30px rgba(0,0,0,0.1)"
+}}
+>
+
+<h1 style={{fontSize:"22px",marginBottom:"5px"}}>
+Horvex
+</h1>
+
+<p style={{color:"#666",marginBottom:"20px"}}>
+Sistema de agendamento
+</p>
+
+<input
+type="email"
+placeholder="Email"
+value={email}
+onChange={(e)=>setEmail(e.target.value)}
+style={input}
+/>
+
+<input
+type="password"
+placeholder="Senha"
+value={password}
+onChange={(e)=>setPassword(e.target.value)}
+style={input}
+/>
+
+<button
+type="submit"
+style={button}
+disabled={loading}
+>
+{loading ? "Entrando..." : "Entrar"}
+</button>
+
+{message && (
+<p style={{color:"red",marginTop:"10px"}}>
+{message}
+</p>
+)}
+
+</form>
+
+</div>
+
+)
+
+}
+
+const input = {
+width:"95%",
+padding:"10px",
+marginBottom:"12px",
+borderRadius:"6px",
+border:"1px solid #ccc"
+}
+
+const button = {
+  display: "block",
+  width: "60%",       // 👈 controla o tamanho
+  margin: "10px auto 0", // 👈 centraliza horizontalmente
+  padding: "12px",
+  background: "#6366f1",
+  color: "#fff",
+  border: "none",
+  borderRadius: "8px",
+  cursor: "pointer",
+  fontWeight: "bold"
 }

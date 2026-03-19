@@ -1,129 +1,344 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL!;
+import {
+Chart as ChartJS,
+CategoryScale,
+LinearScale,
+PointElement,
+LineElement,
+BarElement,
+ArcElement,
+Tooltip,
+Legend
+} from "chart.js"
 
-export default function DashboardPage() {
-  const router = useRouter();
+import { Line, Pie, Bar } from "react-chartjs-2"
 
-  const [servicos, setServicos] = useState<any[]>([]);
-  const [nome, setNome] = useState("");
-  const [preco, setPreco] = useState("");
-  const [duracao, setDuracao] = useState("");
-  const [message, setMessage] = useState("Carregando...");
+ChartJS.register(
+CategoryScale,
+LinearScale,
+PointElement,
+LineElement,
+BarElement,
+ArcElement,
+Tooltip,
+Legend
+)
 
-  async function fetchServicos(token: string) {
-    try {
-      const response = await fetch(`${API_URL}/servicos/`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+const API_URL = process.env.NEXT_PUBLIC_API_URL!
 
-      if (response.status === 401) {
-        localStorage.removeItem("token");
-        router.push("/login");
-        return;
-      }
+type Agendamento = {
+id: number
+inicio: string
+cliente_id: number
+servico_id: number
+profissional_id: number
+}
 
-      if (!response.ok) {
-        throw new Error("Erro ao buscar serviços");
-      }
+type Cliente = { id: number; nome: string }
+type Servico = { id: number; nome: string; preco: number }
+type Profissional = { id: number; nome: string }
 
-      const data = await response.json();
-      setServicos(data);
-      setMessage("");
-    } catch (error: any) {
-      console.error(error);
-      setMessage(error.message);
-    }
-  }
+export default function DashboardPage(){
 
-  async function handleCreateServico(e: React.FormEvent) {
-    e.preventDefault();
+const [agendamentos,setAgendamentos] = useState<Agendamento[]>([])
+const [clientes,setClientes] = useState<Cliente[]>([])
+const [servicos,setServicos] = useState<Servico[]>([])
+const [profissionais,setProfissionais] = useState<Profissional[]>([])
 
-    const token = localStorage.getItem("token");
-    if (!token) return;
+useEffect(()=>{
+carregarDados()
+},[])
 
-    try {
-      const response = await fetch(`${API_URL}/servicos/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          nome,
-          preco: parseFloat(preco),
-          duracao: parseInt(duracao),
-        }),
-      });
+async function carregarDados(){
 
-      if (!response.ok) {
-        throw new Error("Erro ao criar serviço");
-      }
+const token = localStorage.getItem("token")
 
-      setNome("");
-      setPreco("");
-      setDuracao("");
+const [a,c,s,p] = await Promise.all([
 
-      fetchServicos(token);
-    } catch (error: any) {
-      console.error(error);
-      setMessage(error.message);
-    }
-  }
+fetch(`${API_URL}/agendamentos/`,{
+headers:{Authorization:`Bearer ${token}`}
+}),
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
+fetch(`${API_URL}/clientes/`,{
+headers:{Authorization:`Bearer ${token}`}
+}),
 
-    if (!token) {
-      router.push("/login");
-      return;
-    }
+fetch(`${API_URL}/servicos/`,{
+headers:{Authorization:`Bearer ${token}`}
+}),
 
-    fetchServicos(token);
-  }, []);
+fetch(`${API_URL}/profissionais/`,{
+headers:{Authorization:`Bearer ${token}`}
+})
 
-  return (
-    <div style={{ padding: "40px" }}>
-      <h1>Dashboard</h1>
+])
 
-      <h2>Criar Serviço</h2>
-      <form onSubmit={handleCreateServico}>
-        <input
-          placeholder="Nome"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-        />
-        <input
-          placeholder="Preço"
-          value={preco}
-          onChange={(e) => setPreco(e.target.value)}
-        />
-        <input
-          placeholder="Duração (min)"
-          value={duracao}
-          onChange={(e) => setDuracao(e.target.value)}
-        />
-        <button type="submit">Criar</button>
-      </form>
+const ag = await a.json()
+const cl = await c.json()
+const se = await s.json()
+const pr = await p.json()
 
-      <h2>Serviços</h2>
-      {servicos.length === 0 && <p>Nenhum serviço cadastrado.</p>}
+setAgendamentos(Array.isArray(ag) ? ag : [])
+setClientes(Array.isArray(cl) ? cl : [])
+setServicos(Array.isArray(se) ? se : [])
+setProfissionais(Array.isArray(pr) ? pr : [])
 
-      <ul>
-        {servicos.map((servico) => (
-          <li key={servico.id}>
-            {servico.nome} - R$ {servico.preco} - {servico.duracao} min
-          </li>
-        ))}
-      </ul>
+}
 
-      {message && <p style={{ color: "red" }}>{message}</p>}
-    </div>
-  );
+const hoje = new Date()
+const mesAtual = hoje.getMonth()
+const anoAtual = hoje.getFullYear()
+
+const agMes = useMemo(()=>{
+
+const lista = Array.isArray(agendamentos) ? agendamentos : []
+
+return lista.filter(a=>{
+const d = new Date(a.inicio)
+return d.getMonth() === mesAtual && d.getFullYear() === anoAtual
+})
+
+},[agendamentos])
+
+const faturamentoMes = agMes.reduce((total,a)=>{
+const serv = servicos.find(s=>s.id === a.servico_id)
+return total + (serv?.preco || 0)
+},0)
+
+const ticketMedioMes =
+agMes.length > 0 ? (faturamentoMes / agMes.length).toFixed(2) : "0"
+
+const clientesUnicos = new Set(agMes.map(a=>a.cliente_id)).size
+
+const diasMes = new Date(anoAtual, mesAtual + 1, 0).getDate()
+const horasDia = 10
+const capacidadeMes = diasMes * horasDia * profissionais.length
+
+const ocupacaoMes =
+capacidadeMes > 0
+? Math.round((agMes.length / capacidadeMes) * 100)
+: 0
+
+const proximos = [...agendamentos]
+.filter(a=>new Date(a.inicio) >= hoje)
+.sort((a,b)=>new Date(a.inicio).getTime()-new Date(b.inicio).getTime())
+.slice(0,5)
+
+const faturamento30:any = {}
+
+for(let i=29;i>=0;i--){
+
+const d = new Date()
+d.setDate(d.getDate()-i)
+
+const key = d.toLocaleDateString("pt-BR")
+
+faturamento30[key] = 0
+}
+
+agendamentos.forEach(a=>{
+
+const data = new Date(a.inicio).toLocaleDateString("pt-BR")
+const serv = servicos.find(s=>s.id === a.servico_id)
+
+if(faturamento30[data] !== undefined){
+faturamento30[data] += serv?.preco || 0
+}
+
+})
+
+const chartFaturamento = {
+labels:Object.keys(faturamento30),
+datasets:[{
+label:"Faturamento",
+data:Object.values(faturamento30),
+borderColor:"#6366f1",
+backgroundColor:"rgba(99,102,241,0.15)",
+fill:true,
+tension:0.4
+}]
+}
+
+const servicosContagem:any = {}
+
+agMes.forEach(a=>{
+servicosContagem[a.servico_id] =
+(servicosContagem[a.servico_id] || 0) + 1
+})
+
+const pizzaLabels = Object.keys(servicosContagem).map(id=>{
+const s = servicos.find(x=>x.id == Number(id))
+return s?.nome
+})
+
+const pizzaData = Object.values(servicosContagem)
+
+const chartServicos = {
+labels:pizzaLabels,
+datasets:[{
+data:pizzaData,
+backgroundColor:[
+"#6366f1",
+"#10b981",
+"#f59e0b",
+"#ef4444",
+"#8b5cf6"
+]
+}]
+}
+
+const profContagem = profissionais.map(p=>{
+const total = agMes.filter(a=>a.profissional_id===p.id).length
+return {nome:p.nome,total}
+})
+
+const chartProf = {
+labels:profContagem.map(p=>p.nome),
+datasets:[{
+label:"Atendimentos",
+data:profContagem.map(p=>p.total),
+backgroundColor:"#10b981"
+}]
+}
+
+return(
+
+<div style={{padding:"30px"}}>
+
+<h1 style={{marginBottom:"25px"}}>Dashboard</h1>
+
+<div style={{
+display:"grid",
+gridTemplateColumns:"repeat(4,1fr)",
+gap:"20px",
+marginBottom:"25px"
+}}>
+
+<Card titulo="Faturamento do mês" valor={`R$ ${faturamentoMes}`} />
+<Card titulo="Ticket médio do mês" valor={`R$ ${ticketMedioMes}`} />
+<Card titulo="Clientes atendidos" valor={clientesUnicos} />
+<Card titulo="Ocupação do mês" valor={`${ocupacaoMes}%`} />
+
+</div>
+
+<Box titulo="Faturamento últimos 30 dias">
+
+<div style={{height:"320px"}}>
+<Line data={chartFaturamento}/>
+</div>
+
+</Box>
+
+<div style={{
+display:"grid",
+gridTemplateColumns:"1fr 1fr",
+gap:"20px",
+marginTop:"25px"
+}}>
+
+<Box titulo="Serviços mais vendidos">
+<div style={{height:"260px"}}>
+<Pie data={chartServicos}/>
+</div>
+</Box>
+
+<Box titulo="Atendimentos por profissional">
+<div style={{height:"260px"}}>
+<Bar data={chartProf}/>
+</div>
+</Box>
+
+</div>
+
+<Box titulo="Próximos atendimentos" style={{marginTop:"25px"}}>
+
+{proximos.map(a=>{
+
+const cli = clientes.find(c=>c.id===a.cliente_id)
+const serv = servicos.find(s=>s.id===a.servico_id)
+
+const hora = new Date(a.inicio).toLocaleTimeString("pt-BR",{
+hour:"2-digit",
+minute:"2-digit"
+})
+
+return(
+<div
+key={a.id}
+style={{
+display:"flex",
+justifyContent:"space-between",
+padding:"8px 0",
+borderBottom:"1px solid #eee"
+}}
+>
+
+<span>{hora}</span>
+<span>{cli?.nome}</span>
+<span style={{color:"#666"}}>{serv?.nome}</span>
+
+</div>
+)
+})}
+
+</Box>
+
+</div>
+)
+
+}
+
+function Card({titulo,valor}:any){
+
+return(
+
+<div style={{
+background:"#fff",
+padding:"20px",
+borderRadius:"10px",
+boxShadow:"0 2px 10px rgba(0,0,0,0.05)"
+}}>
+
+<div style={{fontSize:"14px",color:"#777"}}>
+{titulo}
+</div>
+
+<div style={{
+fontSize:"26px",
+fontWeight:"bold",
+marginTop:"8px"
+}}>
+{valor}
+</div>
+
+</div>
+
+)
+
+}
+
+function Box({titulo,children,style}:any){
+
+return(
+
+<div style={{
+background:"#fff",
+padding:"20px",
+borderRadius:"10px",
+...style
+}}>
+
+<h3 style={{marginBottom:"15px"}}>
+{titulo}
+</h3>
+
+{children}
+
+</div>
+
+)
+
 }

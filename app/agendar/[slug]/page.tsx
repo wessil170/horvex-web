@@ -6,7 +6,11 @@ import { useParams } from "next/navigation";
 const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 export default function AgendarPage() {
-  const { slug } = useParams();
+  const params = useParams();
+const slug = Array.isArray(params.slug)
+  ? params.slug[0]
+  : params.slug;
+
 
   const [salon, setSalon] = useState<any>(null);
   const [servicos, setServicos] = useState<any[]>([]);

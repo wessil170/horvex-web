@@ -46,11 +46,13 @@ export default function AgendaPage() {
 
     const token = localStorage.getItem("token")
 
-    const [agendaRes,cliRes,serRes,proRes] = await Promise.all([
+    const dataFormatada = dataAtual.toISOString().split("T")[0]
 
-      fetch(`${API_URL}/agendamentos/`,{
+    const [agendaRes, cliRes, serRes, proRes] = await Promise.all([
+      fetch(`${API_URL}/agendamentos/dia/${dataFormatada}`,{
         headers:{ Authorization:`Bearer ${token}` }
       }),
+
 
       fetch(`${API_URL}/clientes/`,{
         headers:{ Authorization:`Bearer ${token}` }

@@ -148,10 +148,7 @@ export default function AgendaCalendar({
       borderRadius:"6px",
       padding:"6px",
       fontSize:"13px",
-
-      height:"70px",      // altura fixa
-      maxHeight:"70px",   // impede compressão
-      overflow:"hidden"   // evita quebrar layout
+      
     }
 
   }

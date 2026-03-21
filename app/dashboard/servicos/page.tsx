@@ -29,7 +29,7 @@ export default function ServicosPage() {
 
     const token = localStorage.getItem("token")
 
-    const res = await fetch(`${API_URL}/servicos`,{
+    const res = await fetch(`${API_URL}/servicos/`,{
       headers:{
         Authorization:`Bearer ${token}`
       }
@@ -88,7 +88,7 @@ export default function ServicosPage() {
 
     }else{
 
-      await fetch(`${API_URL}/servicos`,{
+      await fetch(`${API_URL}/servicos/`,{
         method:"POST",
         headers:{
           "Content-Type":"application/json",

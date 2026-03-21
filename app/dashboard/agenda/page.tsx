@@ -77,33 +77,21 @@ export default function AgendaPage() {
 
    const listaAgendamentos = Array.isArray(ag) ? ag : []
 
-const eventosFormatados = listaAgendamentos.map((a:any)=>{
+const eventosFormatados = listaAgendamentos.map((a:any)=>({
 
-  const cliente = c.find((cli:any)=>cli.id === a.cliente_id)
-  const servico = s.find((ser:any)=>ser.id === a.servico_id)
-  const profissional = p.find((pro:any)=>pro.id === a.profissional_id)
+  id: a.id,
 
-  const inicio = new Date(a.inicio)
-const fim = new Date(a.fim)
+  title: `${a.servico || ""}\n${a.cliente || ""}`,
 
-  return{
+  start: new Date(a.inicio),
+  end: new Date(a.fim),
 
-    id:a.id,
+  resourceId: a.profissional_id, // 🔥 ESSENCIAL
 
-    title:`${servico?.nome || ""}
-${cliente?.nome || ""}`,
+  resource: a
 
-    start:inicio,
+}))
 
-    end:fim,
-
-    resourceId:profissional?.id,
-
-    resource:a
-
-  }
-
-})
 
     setEventos(eventosFormatados)
 

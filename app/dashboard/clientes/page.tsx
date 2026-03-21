@@ -64,7 +64,7 @@ export default function ClientesPage(){
 
     const token = localStorage.getItem("token")
 
-    const res = await fetch(`${API_URL}/clientes`,{
+    const res = await fetch(`${API_URL}/clientes/`,{
       headers:{
         Authorization:`Bearer ${token}`
       }
@@ -123,7 +123,7 @@ export default function ClientesPage(){
 
     }else{
 
-      await fetch(`${API_URL}/clientes`,{
+      await fetch(`${API_URL}/clientes/`,{
         method:"POST",
         headers:{
           "Content-Type":"application/json",

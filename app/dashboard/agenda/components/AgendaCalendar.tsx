@@ -137,7 +137,9 @@ export default function AgendaCalendar({
 
         eventPropGetter={(event: MeuEvento)=>{
 
-  const servico = event.title.split("\n")[0]
+  const partes = (event.title || "").split("\n")
+  const servico = partes[0] || ""
+
 
   return{
 

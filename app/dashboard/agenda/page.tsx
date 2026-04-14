@@ -85,20 +85,21 @@ export default function AgendaPage() {
 
 const eventosFormatados = listaAgendamentos.map((a:any) => {
 
-  const prof = p.find((prof:any) =>
-    prof.nome?.toLowerCase().trim() === a.profissional?.toLowerCase().trim()
-  )
-
-  if (!prof) {
-    console.log("❌ PROFISSIONAL NÃO ENCONTRADO:", a.profissional)
+  if (!a.profissional_id) {
+    console.log("❌ SEM profissional_id:", a)
   }
 
   return {
     id: a.id,
+
     title: `${a.servico || ""}\n${a.cliente || ""}`,
+
     start: new Date(a.inicio),
     end: new Date(a.fim),
-    resourceId: prof?.id,
+
+    // 🔥 AGORA CORRETO
+    resourceId: a.profissional_id,
+
     resource: a
   }
 

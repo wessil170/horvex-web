@@ -46,8 +46,12 @@ export default function AgendaPage() {
 
     const token = localStorage.getItem("token")
 
-    const dataFormatada = dataAtual.toISOString().split("T")[0]
+    const ano = dataAtual.getFullYear()
+    const mes = String(dataAtual.getMonth() + 1).padStart(2, "0")
+    const dia = String(dataAtual.getDate()).padStart(2, "0")
 
+    const dataFormatada = `${ano}-${mes}-${dia}`
+    
     const [agendaRes, cliRes, serRes, proRes] = await Promise.all([
       fetch(`${API_URL}/agendamentos/dia/${dataFormatada}`,{
         headers:{ Authorization:`Bearer ${token}` }
@@ -79,20 +83,29 @@ export default function AgendaPage() {
 
    const listaAgendamentos = Array.isArray(ag) ? ag : []
 
-const eventosFormatados = listaAgendamentos.map((a:any)=>({
+const eventosFormatados = listaAgendamentos.map((a:any) => {
 
-  id: a.id,
+  // 🔥 tenta encontrar o profissional pelo nome (caso venha string)
+  const prof = profissionais.find((p:any) => 
+    p.nome?.toLowerCase() === a.profissional?.toLowerCase()
+  )
 
-  title: `${a.servico || ""}\n${a.cliente || ""}`,
+  return {
+    id: a.id,
 
-  start: new Date(a.inicio),
-  end: new Date(a.fim),
+    title: `${a.servico || ""}\n${a.cliente || ""}`,
 
-  resourceId: a.profissional_id, // 🔥 ESSENCIAL
+    // ✅ SEM "Z"
+    start: new Date(a.inicio),
+    end: new Date(a.fim),
 
-  resource: a
+    // ✅ usa ID correto se existir, senão usa nome (fallback)
+    resourceId: prof?.id || a.profissional,
 
-}))
+    resource: a
+  }
+
+})
 
 
     setEventos(eventosFormatados)

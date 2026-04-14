@@ -85,8 +85,8 @@ export default function AgendaPage() {
 
 const eventosFormatados = listaAgendamentos.map((a:any) => {
 
-  const prof = profissionais.find((p:any) =>
-    p.nome?.toLowerCase().trim() === a.profissional?.toLowerCase().trim()
+  const prof = p.find((prof:any) =>
+    prof.nome?.toLowerCase().trim() === a.profissional?.toLowerCase().trim()
   )
 
   if (!prof) {
@@ -95,15 +95,10 @@ const eventosFormatados = listaAgendamentos.map((a:any) => {
 
   return {
     id: a.id,
-
     title: `${a.servico || ""}\n${a.cliente || ""}`,
-
     start: new Date(a.inicio),
     end: new Date(a.fim),
-
-    // 🔥 OBRIGATÓRIO: número (id)
     resourceId: prof?.id,
-
     resource: a
   }
 
